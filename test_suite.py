@@ -87,7 +87,7 @@ class TestPractical3_SearchAgent(unittest.TestCase):
 
         # The shortest path taking Manhattan distance around these specific walls is exactly 6 steps.
         # Path: Up -> Right -> Right -> Right -> Up -> Up
-        self.assertEqual(len(path), 6, f"BFS did not find the optimal path. Expected 6 steps, got {len(path)}.")
+        self.assertEqual(len(path or []), 6, f"BFS did not find the optimal path. Expected 6 steps, got {len(path or [])}.")
 
     def test_bfs_unreachable_goal(self):
         """Test 4: BFS must correctly return failure (None/Empty) if goal is blocked."""

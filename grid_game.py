@@ -11,8 +11,9 @@ class GridHuntGame:
         self.agent_pos = [0, 0]  # Starting position (x, y)
 
         # Place a few random food pellets and obstacles (walls)
-        self.food_positions = {[1, 2], [2, 3], [3, 0], [2, 1]}
-        self.walls = {[1, 1], [2, 2]}
+        self.food_positions = {(1, 2), (2, 3), (3, 0), (2, 1)}
+        self.walls = {(1, 1), (2, 2)}
+        self.toxic_traps = {(0, 3), (3, 1)}
 
         self.score = 0
         self.steps = 0
@@ -47,9 +48,11 @@ class GridHuntGame:
 
         # Check if eating food
         tuple_pos = tuple(self.agent_pos)
-        if tuple_pos in self.food_positions:
-            self.food_positions.remove(tuple_pos)
-            self.score += 20  # Reward for eating food pellet
+        if len(tuple_pos) == 2:
+            pos_2d: tuple[int, int] = (tuple_pos[0], tuple_pos[1])
+            if pos_2d in self.food_positions:
+                self.food_positions.remove(pos_2d)
+                self.score += 20  # Reward for eating food pellet
 
     def is_done(self) -> bool:
         return len(self.food_positions) == 0 or self.steps >= 20
