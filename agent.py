@@ -3,6 +3,7 @@ import random
 from collections import deque
 import heapq
 import math
+from logic_engine import KnowledgeBase
 
 
 class GreedyGridAgent:
@@ -57,6 +58,9 @@ class SearchAgent:
     def __init__(self, active_algo: str = 'BFS'):
         self.plan = []
         self.active_algo = active_algo
+        self.kb = KnowledgeBase()
+        self.kb.tell_rule(['TargetVisible', 'HasDust'], 'SafeToEngage')
+        self.kb.tell_rule(['SafeToEngage', 'BloodseekerMissing'], 'Retreat')
         # mapping for convenience
         self.search_methods = {
             'BFS': self.bfs_search,
@@ -73,7 +77,7 @@ class SearchAgent:
     def euclidean_distance(self, pos, goal):
         return math.sqrt((pos[0] - goal[0]) ** 2 + (pos[1] - goal[1]) ** 2)
 
-    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan', tile_percepts=None):
         start = (start_pos[0], start_pos[1])
         goal = (goal_pos[0], goal_pos[1])
         width, height = grid_size
@@ -104,6 +108,13 @@ class SearchAgent:
                     and neighbor not in walls
                     and neighbor not in reached_states
                 ):
+                    self.kb.clear_facts()
+                    for fact in (tile_percepts or {}).get(neighbor, ()):
+                        self.kb.tell_fact(fact)
+                    self.kb.forward_chain()
+                    if 'Retreat' in self.kb.facts:
+                        continue
+
                     new_g_cost = g_cost + 1
                     new_f_cost = new_g_cost + heuristic(neighbor, goal)
                     new_path = path_taken + [action]
@@ -230,9 +241,10 @@ class SearchAgent:
         target = tuple(sorted(foods, key=manh)[0])
         walls = percept.get('walls', [])
         grid_size = percept.get('grid_size', (10, 10))
+        tile_percepts = percept.get('tile_percepts', {})
 
         if self.active_algo == 'AStar':
-            path = self.astar_search((x, y), target, walls, grid_size)
+            path = self.astar_search((x, y), target, walls, grid_size, tile_percepts=tile_percepts)
         else:
             search_method = self.search_methods.get(self.active_algo, self.bfs_search)
             path = search_method((x, y), target, walls, grid_size)

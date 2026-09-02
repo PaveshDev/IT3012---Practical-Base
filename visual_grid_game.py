@@ -58,6 +58,17 @@ class VisualGridHuntGame:
     def get_percept(self) -> dict:
 
         x, y = self.agent_pos
+        tile_percepts = {}
+
+        for position in self.food_positions:
+            tile_percepts.setdefault(position, set()).add("TargetVisible")
+        for position in self.toxic_traps:
+            tile_percepts.setdefault(position, set()).add("HasDust")
+        opponent_positions = {tuple(position) for position in self.opponents}
+        for tile_x in range(self.width):
+            for tile_y in range(self.height):
+                if (tile_x, tile_y) not in opponent_positions:
+                    tile_percepts.setdefault((tile_x, tile_y), set()).add("BloodseekerMissing")
 
         # Agent can only sense the cell directly in front (UP direction)
         next_cell = (x, y + 1)
@@ -76,7 +87,8 @@ class VisualGridHuntGame:
             "wall_ahead": wall_ahead,
             "grid_size": (self.width, self.height),
             "walls": list(self.walls),
-            "all_food": list(self.food_positions)
+            "all_food": list(self.food_positions),
+            "tile_percepts": tile_percepts
         }
     def execute_action(self, action: str):
         self.steps += 1
